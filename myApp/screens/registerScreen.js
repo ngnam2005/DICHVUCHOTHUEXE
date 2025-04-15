@@ -26,7 +26,6 @@ const RegisterScreen = ({ navigation }) => {
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessages, setErrorMessages] = useState([]);
 
-
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -54,9 +53,8 @@ const RegisterScreen = ({ navigation }) => {
 
         dispatch(registerUser(userData)).then((result) => {
             if (registerUser.fulfilled.match(result)) {
-
                 setSuccessMessage("Đăng ký thành công!");
-                setTimeout(() => setSuccessMessage(""), 3000); // Ẩn sau 3s
+                setTimeout(() => setSuccessMessage(""), 3000); // Hide success message after 3 seconds
 
                 // Reset form
                 setNameAccount("");
@@ -69,8 +67,6 @@ const RegisterScreen = ({ navigation }) => {
                 setBirthday(null);
                 setAvatar(null);
                 setRole("");
-
-                // errors = [];
             }
         });
     };
@@ -136,7 +132,7 @@ const styles = StyleSheet.create({
     roleContainer: { marginHorizontal: 10 },
     avatar: { width: 80, height: 80, borderRadius: 40 },
     uploadText: { color: "#FF5722", fontWeight: "bold" },
-    success: { color: "green", fontWeight: "bold", textAlign: "center", marginVertical: 10, },
+    success: { color: "green", fontWeight: "bold", textAlign: "center", marginVertical: 10 },
     error: { color: "red", fontWeight: "bold", marginVertical: 10 }
 });
 

@@ -11,9 +11,12 @@ import HomeScreen from "../screens/HomeScreen";
 import ForgotPasswordScreen from "../screens/ForgotPassScreen";
 import Navigation from "./navigationBottom";
 import VerifyOtpScreen from "../screens/verify_OTP";
-
-
-
+import PaymentScreen from "../screens/PaymentScreen";
+import OrderHistoryScreen from "../screens/OrderHistoryScreen";
+import UpdateProfileScreen from "../screens/UpdateProfileSceen";
+import ChangePassScreen from "../screens/ChangePassScreen";
+import DetailVehicleScreen from "../screens/DetailVehicleScreen";
+import SearchScreen from "../screens/SearchScreen";
 
 
 
@@ -36,7 +39,13 @@ const NavigationWelcome = () => (
         <Stack.Screen name="Auth" component={AuthTabs} />
         <Stack.Screen name="HomeScreen" component={Navigation} />
         <Stack.Screen name="ForgotPass" component={ForgotPasswordScreen}/>
+        <Stack.Screen name="Payment" component={PaymentScreen}/>
         <Stack.Screen name="VerifyOTP" component={VerifyOtpScreen}/>
+        <Stack.Screen name="OrderHistory" component={OrderHistoryScreen}/>
+        <Stack.Screen name="UpdateProfile" component={UpdateProfileScreen}/>
+        <Stack.Screen name="ChangePass" component={ChangePassScreen}/>
+        <Stack.Screen name="DetailVehicleScreen" component={DetailVehicleScreen}/>
+        <Stack.Screen component={SearchScreen} name="SearchScreen"/>
       </Stack.Navigator>
     </NavigationContainer>
   </Provider>

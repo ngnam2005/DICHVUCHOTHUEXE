@@ -3,8 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import API_BASE_URL from "../localhost/localhost";
 
-const ItemVehicle = ({ vehicle }) => {
-    const [isFavorite, setIsFavorite] = useState(false);
+const ItemVehicle = ({ vehicle, onAddToCart, isFavorite, onToggleFavorite, onPress }) => {
 
     // Lấy ảnh đầu tiên từ mảng `vehicle.images`
     const imageUrl = Array.isArray(vehicle.images) && vehicle.images.length > 0
@@ -16,24 +15,27 @@ const ItemVehicle = ({ vehicle }) => {
     return (
         <View style={styles.container}>
             {/* Icon trái tim */}
-            <TouchableOpacity onPress={() => setIsFavorite(!isFavorite)} style={styles.heartIcon}>
+            <TouchableOpacity onPress={onToggleFavorite} style={styles.heartIcon}>
                 <MaterialIcons
                     name={isFavorite ? "favorite" : "favorite-border"}
                     size={24}
                     color={isFavorite ? "#ff4d4d" : "gray"}
                 />
             </TouchableOpacity>
-            <Image source={{ uri: imageUrl }} style={styles.image} />
-            <Text style={styles.subTitle}>
-                {typeof vehicle.type === "string" ? vehicle.type : vehicle.type?.name || "Unknown"}
-            </Text>
-            <Text style={styles.title}>{vehicle.name}</Text>
-            <Text style={styles.price}>
-                {vehicle.rentalPricePerDay
-                    ? `${new Intl.NumberFormat('vi-VN').format(vehicle.rentalPricePerDay)} VND`
-                    : "Liên hệ"}
-            </Text>
-            <TouchableOpacity style={styles.cartButton}>
+            <TouchableOpacity onPress={onPress}>
+                <Image source={{ uri: imageUrl }} style={styles.image} />
+                <Text style={styles.subTitle}>
+                    {typeof vehicle.type === "string" ? vehicle.type : vehicle.type?.name || "Unknown"}
+                </Text>
+                <Text style={styles.title}>{vehicle.name}</Text>
+                <Text style={styles.price}>
+                    {vehicle.rentalPricePerDay
+                        ? `${new Intl.NumberFormat('vi-VN').format(vehicle.rentalPricePerDay)} VND`
+                        : "Liên hệ"}
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cartButton} onPress={onAddToCart}>
                 <MaterialIcons name="shopping-cart" size={20} color="white" />
             </TouchableOpacity>
         </View>
@@ -89,6 +91,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "bold",
         color: "#E44D26",
+        textAlign: "center"
     },
     cartButton: {
         position: "absolute",

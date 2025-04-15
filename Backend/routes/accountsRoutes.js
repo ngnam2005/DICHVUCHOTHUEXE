@@ -29,7 +29,7 @@ router.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, account.password);
         console.log("Kết quả so sánh mật khẩu:", isMatch);
         if (!isMatch) return res.status(400).json({ message: 'Sai mật khẩu!' });
-        
+
 
         const token = jwt.sign({ id: account._id, nameAccount: account.nameAccount }, JWT_SECRET, { expiresIn: '2h' });
 
@@ -42,6 +42,9 @@ router.post('/login', async (req, res) => {
                 email: account.email,
                 fullname: account.fullname,
                 avatar: account.avatar,
+                phone: account.phone,
+                birthday: account.birthday,
+                role: account.role
             },
         });
     } catch (error) {
@@ -251,37 +254,75 @@ router.post('/reset-password', async (req, res) => {
 // 📌 API Đổi mật khẩu với OTP
 router.post('/change-password', async (req, res) => {
     try {
-        const { email, otp, newPassword } = req.body;
+        const { email, currentPassword, newPassword } = req.body;
 
-        if (otpStorage[email] !== otp)
-            return res.status(400).json({ message: 'OTP không hợp lệ!' });
+        if (!email || !currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Thiếu thông tin bắt buộc!' });
+        }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        await Account.findOneAndUpdate({ email }, { password: hashedPassword });
+        // Kiểm tra tài khoản
+        const account = await Account.findOne({ email });
+        if (!account) {
+            return res.status(404).json({ message: 'Email không tồn tại!' });
+        }
 
-        delete otpStorage[email];
+        // So sánh mật khẩu hiện tại
+        const isMatch = await bcrypt.compare(currentPassword, account.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Mật khẩu hiện tại không đúng!' });
+        }
 
-        res.json({ message: 'Mật khẩu đã được cập nhật!' });
+        // Cập nhật mật khẩu mới
+        // const hashedPassword = await bcrypt.hash(newPassword, 10);
+        account.password = newPassword;
+        await account.save();
+
+        return res.json({ message: 'Mật khẩu đã được cập nhật thành công!' });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: error.message });
     }
 });
 
-// 📌 API Cập nhật tài khoản
-router.put('/update/:id', async (req, res) => {
-    try {
-        const updates = req.body;
 
-        const updatedAccount = await Account.findByIdAndUpdate(req.params.id, updates, { new: true });
+// 📌 API Cập nhật tài khoản (Không cho phép cập nhật mật khẩu)
+router.put('/update/:id', upload.single("avatar"), async (req, res) => {
+    // console.log("BODY:", req.body);
+    // console.log("FILE:", req.file);
+    try {
+        const updates = { ...req.body };
+
+        // Không cho phép cập nhật mật khẩu từ đây
+        if ('password' in updates) {
+            delete updates.password;
+        }
+
+        // Nếu có file avatar mới
+        if (req.file) {
+            updates.avatar = `/uploads/${req.file.filename}`;
+        }
+
+        const updatedAccount = await Account.findByIdAndUpdate(
+            req.params.id,
+            updates,
+            { new: true }
+        );
 
         if (!updatedAccount)
             return res.status(404).json({ message: 'Tài khoản không tồn tại!' });
 
-        res.json({ message: 'Cập nhật thành công!', account: updatedAccount });
+        const accountWithoutPassword = updatedAccount.toObject();
+        delete accountWithoutPassword.password;
+
+        res.json({
+            message: 'Cập nhật thành công!',
+            account: accountWithoutPassword
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
 // 📌 API Xác thực Token (Validate Token)
 router.post('/validate-token', async (req, res) => {
     try {

@@ -81,4 +81,23 @@ router.delete("/delete/:id", async (req, res) => {
     }
 });
 
+// 📌 Tìm kiếm xe theo tên
+router.get("/search", async (req, res) => {
+    try {
+        const { name } = req.query;
+
+        if (!name) {
+            return res.status(400).json({ error: "Vui lòng cung cấp tên xe để tìm kiếm" });
+        }
+
+        const vehicles = await Vehicle.find({
+            name: { $regex: name, $options: "i" } // tìm gần đúng, không phân biệt hoa thường
+        }).populate("type", "name description");
+
+        res.json(vehicles);
+    } catch (error) {
+        res.status(500).json({ error: "Lỗi khi tìm kiếm xe" });
+    }
+});
+
 module.exports = router;

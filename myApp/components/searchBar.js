@@ -1,11 +1,13 @@
 import React from "react";
-import { View, TextInput, StyleSheet } from "react-native";
+import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const SearchBar = ({ value, onChangeText, placeholder = "Search..." }) => {
+const SearchBar = ({ value, onChangeText, onSearchPress, placeholder = "Search..." }) => {
     return (
         <View style={styles.container}>
-            <Ionicons name="search" size={20} color="gray" style={styles.icon} />
+            <TouchableOpacity onPress={onSearchPress}>
+                <Ionicons name="search" size={20} color="gray" style={styles.icon} />
+            </TouchableOpacity>
             <TextInput
                 style={styles.input}
                 placeholder={placeholder}

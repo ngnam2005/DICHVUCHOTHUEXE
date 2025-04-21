@@ -4,7 +4,7 @@ const upload = require("../config/multer");
 
 const router = express.Router();
 
-// 📌 Tạo xe mới (có hỗ trợ upload nhiều ảnh)
+//Tạo xe mới (có hỗ trợ upload nhiều ảnh)
 router.post("/add", upload.array("images", 5), async (req, res) => {
     try {
         const { name, brand, yearManufactured, rentalPricePerDay, type, status } = req.body;
@@ -29,7 +29,7 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
     }
 });
 
-// 📌 Cập nhật thông tin xe (có hỗ trợ update nhiều ảnh)
+//Cập nhật thông tin xe (có hỗ trợ update nhiều ảnh)
 router.put("/update/:id", upload.array("images", 5), async (req, res) => {
     try {
         const { name, brand, yearManufactured, rentalPricePerDay, type, status } = req.body;
@@ -47,7 +47,7 @@ router.put("/update/:id", upload.array("images", 5), async (req, res) => {
     }
 });
 
-// 📌 Lấy danh sách xe (populate type)
+//Lấy danh sách xe (populate type)
 router.get("/getAll", async (req, res) => {
     try {
         const vehicles = await Vehicle.find().populate("type", "name description");
@@ -57,7 +57,7 @@ router.get("/getAll", async (req, res) => {
     }
 });
 
-// 📌 Lấy thông tin xe theo ID (có danh sách ảnh)
+//Lấy thông tin xe theo ID (có danh sách ảnh)
 router.get("/getById/:id", async (req, res) => {
     try {
         const vehicle = await Vehicle.findById(req.params.id).populate("type", "name description");
@@ -69,7 +69,7 @@ router.get("/getById/:id", async (req, res) => {
     }
 });
 
-// 📌 Xóa xe
+//Xóa xe
 router.delete("/delete/:id", async (req, res) => {
     try {
         const deletedVehicle = await Vehicle.findByIdAndDelete(req.params.id);
@@ -81,7 +81,7 @@ router.delete("/delete/:id", async (req, res) => {
     }
 });
 
-// 📌 Tìm kiếm xe theo tên
+//Tìm kiếm xe theo tên
 router.get("/search", async (req, res) => {
     try {
         const { name } = req.query;
@@ -97,6 +97,26 @@ router.get("/search", async (req, res) => {
         res.json(vehicles);
     } catch (error) {
         res.status(500).json({ error: "Lỗi khi tìm kiếm xe" });
+    }
+});
+
+router.get("/getByType/:typeId", async (req, res) => {
+    try {
+        const { typeId } = req.params;
+
+        // Fetch vehicles by typeId and populate the 'type' field with the 'name' field
+        const vehicles = await Vehicle.find({ type: typeId }).populate("type", "name");
+
+        if (vehicles.length === 0) {
+            // If no vehicles are found, send a 404 response
+            return res.status(404).json({ message: "Không có xe nào thuộc loại này" });
+        }
+
+        // Send the vehicles in the response
+        return res.json(vehicles);  // The response should be sent once
+    } catch (error) {
+        // If an error occurs, send a 500 response
+        res.status(500).json({ error: "Lỗi khi tìm xe theo loại" });
     }
 });
 

@@ -12,6 +12,7 @@ import SearchBar from "../components/searchBar";
 import axios from "axios";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import API_BASE_URL from "../localhost/localhost";
+import Header from "../components/header";
 
 const SearchScreen = () => {
     const route = useRoute();
@@ -77,6 +78,7 @@ const SearchScreen = () => {
 
     return (
         <View style={styles.container}>
+            <Header title={"Search"} hideUser={true} />
             <SearchBar
                 value={searchText}
                 onChangeText={setSearchText}
@@ -117,7 +119,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fff",
-        paddingTop: 10,
     },
     card: {
         flexDirection: "row",

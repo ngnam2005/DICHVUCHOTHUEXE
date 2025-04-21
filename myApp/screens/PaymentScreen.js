@@ -8,15 +8,26 @@ import {
     Image,
     ScrollView,
     ActivityIndicator,
+    TextInput,
+    KeyboardAvoidingView,
+    Platform,
+    Keyboard
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API_BASE_URL from '../localhost/localhost';
+import ConfirmPayment from '../components/ConfirmModalPayment';
 
 const PaymentScreen = ({ route, navigation }) => {
     const { cart, startDate, endDate, rentalDays, totalPrice } = route.params;
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState(null);
+
+    // Thông tin thêm khi xác nhận
+    const [paymentMethod, setPaymentMethod] = useState(null);
+    const [cccd, setCccd] = useState('');
+    const [bankName, setBankName] = useState('');
+    const [cardNumber, setCardNumber] = useState('');
 
     useEffect(() => {
         const getUser = async () => {
@@ -26,7 +37,32 @@ const PaymentScreen = ({ route, navigation }) => {
         getUser();
     }, []);
 
-    const handlePayment = async (method) => {
+    const validatePaymentInfo = () => {
+        if (!cccd) {
+            Alert.alert("Lỗi", "Vui lòng nhập số CCCD");
+            return false;
+        }
+
+        if (paymentMethod === 'Chuyển khoản') {
+            if (!bankName || !cardNumber) {
+                Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin ngân hàng");
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    const handleConfirmPayment = () => {
+        if (!validatePaymentInfo()) return;
+        proceedPayment(paymentMethod);
+    };
+
+    const handlePayment = (method) => {
+        setPaymentMethod(method);
+    };
+
+    const proceedPayment = async (method) => {
         setLoading(true);
         try {
             const orderData = {
@@ -46,10 +82,17 @@ const PaymentScreen = ({ route, navigation }) => {
                 rentalEndDate: endDate,
                 rentalDays,
                 totalPrice,
-                paymentMethod: method
+                paymentMethod: method,
+                paymentStatus: method === 'Chuyển khoản' ? "Đã thanh toán" : "Chưa thanh toán",
+                cccd,
+                ...(method === 'Chuyển khoản' && {
+                    bankName,
+                    cardNumber,
+                    cardHolderName: user.fullname
+                })
             };
 
-            await axios.post(`${API_BASE_URL}/api/orders/create`, orderData);
+            const res = await axios.post(`${API_BASE_URL}/api/orders/create`, orderData);
 
             Alert.alert("Thành công", "Đơn hàng đã được thanh toán", [
                 {
@@ -68,76 +111,96 @@ const PaymentScreen = ({ route, navigation }) => {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>Thông tin đơn hàng</Text>
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+            <ScrollView style={styles.container}>
+                <Text style={styles.title}>Thông tin đơn hàng</Text>
 
-            {user && (
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Người thuê:</Text>
-                    <View style={styles.userInfo}>
-                        <Image
-                            source={user?.avatar
-                                ? { uri: `${API_BASE_URL}${user?.avatar}` }
-                                : { uri: "https://i.pravatar.cc/150?img=3" }
-                            }
-                            style={styles.avatar}
-                        />
-                        <Text style={styles.name}>{user.fullname}</Text>
-                    </View>
-                </View>
-            )}
-
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Sản phẩm thuê:</Text>
-                {cart.vehicles.map((item, index) => {
-                    const imagePath = item.vehicleId?.image || item.vehicleId?.images?.[0] || '';
-                    const imageUrl = imagePath.startsWith('http') ? imagePath : `${API_BASE_URL}${imagePath}`;
-                    return (
-                        <View key={index} style={styles.vehicleItem}>
-                            <Image source={{ uri: imageUrl }} style={styles.vehicleImage} />
-                            <View style={styles.vehicleInfo}>
-                                <Text style={styles.vehicleName}>{item.vehicleId.name}</Text>
-                                <Text>Giá thuê/ngày: {item.vehicleId.rentalPricePerDay.toLocaleString()} VND</Text>
-                                <Text>Số lượng: {item.quantity}</Text>
-                            </View>
+                {user && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Người thuê:</Text>
+                        <View style={styles.userInfo}>
+                            <Image
+                                source={user?.avatar
+                                    ? { uri: `${API_BASE_URL}${user?.avatar}` }
+                                    : { uri: "https://i.pravatar.cc/150?img=3" }}
+                                style={styles.avatar}
+                            />
+                            <Text style={styles.name}>{user.fullname}</Text>
                         </View>
-                    );
-                })}
-            </View>
+                    </View>
+                )}
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Thời gian thuê:</Text>
-                <Text>Ngày thuê: {new Date(startDate).toLocaleDateString()}</Text>
-                <Text>Ngày trả: {new Date(endDate).toLocaleDateString()}</Text>
-                <Text>Số ngày thuê: {rentalDays} ngày</Text>
-                <Text style={styles.totalPrice}>Tổng tiền: {totalPrice.toLocaleString()} VND</Text>
-            </View>
-
-            {loading && (
-                <View style={{ alignItems: 'center', marginBottom: 10 }}>
-                    <ActivityIndicator size="large" color="#28a745" />
-                    <Text>Đang xử lý thanh toán...</Text>
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Sản phẩm thuê:</Text>
+                    {cart.vehicles.map((item, index) => {
+                        const imagePath = item.vehicleId?.image || item.vehicleId?.images?.[0] || '';
+                        const imageUrl = imagePath.startsWith('http') ? imagePath : `${API_BASE_URL}${imagePath}`;
+                        return (
+                            <View key={index} style={styles.vehicleItem}>
+                                <Image source={{ uri: imageUrl }} style={styles.vehicleImage} />
+                                <View style={styles.vehicleInfo}>
+                                    <Text style={styles.vehicleName}>{item.vehicleId.name}</Text>
+                                    <Text>Giá thuê/ngày: {item.vehicleId.rentalPricePerDay.toLocaleString()} VND</Text>
+                                    <Text>Số lượng: {item.quantity}</Text>
+                                </View>
+                            </View>
+                        );
+                    })}
                 </View>
-            )}
 
-            <Text style={styles.title}>Chọn phương thức thanh toán</Text>
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Thời gian thuê:</Text>
+                    <Text>Ngày thuê: {new Date(startDate).toLocaleDateString()}</Text>
+                    <Text>Ngày trả: {new Date(endDate).toLocaleDateString()}</Text>
+                    <Text>Số ngày thuê: {rentalDays} ngày</Text>
+                    <Text style={styles.totalPrice}>Tổng tiền: {totalPrice.toLocaleString()} VND</Text>
+                </View>
 
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => handlePayment("Tiền mặt")}
-                disabled={loading}
-            >
-                <Text style={styles.buttonText}>Thanh toán tiền mặt</Text>
-            </TouchableOpacity>
+                {loading && (
+                    <View style={{ alignItems: 'center', marginBottom: 10 }}>
+                        <ActivityIndicator size="large" color="#28a745" />
+                        <Text>Đang xử lý thanh toán...</Text>
+                    </View>
+                )}
 
-            <TouchableOpacity
-                style={[styles.button, { backgroundColor: "#007bff" }]}
-                onPress={() => handlePayment("Chuyển khoản")}
-                disabled={loading}
-            >
-                <Text style={styles.buttonText}>Chuyển khoản ngân hàng</Text>
-            </TouchableOpacity>
-        </ScrollView>
+                <Text style={styles.title}>Chọn phương thức thanh toán</Text>
+
+                <TouchableOpacity
+                    style={[styles.button, paymentMethod === "Tiền mặt" && styles.activeButton]}
+                    onPress={() => handlePayment("Tiền mặt")}
+                    disabled={loading}
+                >
+                    <Text style={styles.buttonText}>Thanh toán tiền mặt</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.button, { backgroundColor: "#007bff" }, paymentMethod === "Chuyển khoản" && styles.activeButton]}
+                    onPress={() => handlePayment("Chuyển khoản")}
+                    disabled={loading}
+                >
+                    <Text style={styles.buttonText}>Chuyển khoản ngân hàng</Text>
+                </TouchableOpacity>
+
+                {paymentMethod && (
+                    <ConfirmPayment
+                        paymentMethod={paymentMethod}
+                        cccd={cccd}
+                        setCccd={setCccd}
+                        bankName={bankName}
+                        setBankName={setBankName}
+                        cardNumber={cardNumber}
+                        setCardNumber={setCardNumber}
+                        user={user}
+                        onConfirm={handleConfirmPayment}
+                        loading={loading}
+                    />
+                )}
+
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -145,7 +208,8 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
+        marginBottom: 30
     },
     title: {
         fontSize: 20,
@@ -207,10 +271,21 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         alignItems: 'center'
     },
+    activeButton: {
+        borderWidth: 2,
+        borderColor: '#000'
+    },
     buttonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: "bold"
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 10
     }
 });
 

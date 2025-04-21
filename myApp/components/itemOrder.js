@@ -32,12 +32,12 @@ const ItemOrder = ({ item, onCancel }) => {
                 // Ensure image URL is correctly formed
                 const imageUrl = v.image?.startsWith('http') ? v.image : `${API_BASE_URL}${v.image}`;
                 console.log(imageUrl)
-                
+
                 return (
                     <View key={index} style={styles.vehicleItem}>
-                        <Image 
-                            source={{ uri: imageUrl }} 
-                            style={styles.image} 
+                        <Image
+                            source={{ uri: imageUrl }}
+                            style={styles.image}
                         />
                         <View>
                             <Text style={styles.name}>{v.name}</Text>
@@ -50,7 +50,7 @@ const ItemOrder = ({ item, onCancel }) => {
 
             <Text>Ngày thuê: {new Date(item.rentalStartDate).toLocaleDateString()}</Text>
             <Text>Ngày trả: {new Date(item.rentalEndDate).toLocaleDateString()}</Text>
-            <Text>Phương thức thanh toán: {item.paymentMethod}</Text>
+            <Text>Trạng thái thanh toán:<Text style={{ color: item.paymentStatus === "Đã thanh toán" ? 'green' : 'red' }}>{item.paymentStatus}</Text> </Text>
             <Text style={styles.status}>Trạng thái: {item.status}</Text>
             <Text style={styles.total}>Tổng: {item.totalPrice.toLocaleString()} VND</Text>
 

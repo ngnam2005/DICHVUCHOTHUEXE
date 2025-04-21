@@ -1,12 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, RefreshControl, Alert, ActivityIndicator } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    FlatList,
+    RefreshControl,
+    Alert,
+    ActivityIndicator
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';
-import ModalDate from '../components/modalDate'; // Assuming ModalDate is your date picker component
-import { getCartByUserId, removeVehicleFromCart, updateVehicleQuantity } from '../redux/slices/cartSlice';
-import ItemCart from '../components/item_cart_product'; // Assuming ItemCart is a component for displaying each item in the cart
+import ModalDate from '../components/modalDate';
+import {
+    clearCart,
+    getCartByUserId,
+    removeVehicleFromCart,
+    updateVehicleQuantity
+} from '../redux/slices/cartSlice';
+import ItemCart from '../components/item_cart_product';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Sử dụng MaterialIcons
 
 const CartScreen = () => {
     const dispatch = useDispatch();
@@ -15,6 +29,7 @@ const CartScreen = () => {
 
     const cart = useSelector(state => state.cart.cart);
     const status = useSelector(state => state.cart.status);
+
     const [refreshing, setRefreshing] = useState(false);
     const [showModalDate, setShowModalDate] = useState(false);
     const [startDate, setStartDate] = useState(null);
@@ -80,12 +95,17 @@ const CartScreen = () => {
         }
     }, [cart?.vehicles, dispatch, fetchCartData, getUserId, removeVehicle]);
 
-    const calculateRentalDays = (start, end) => {
-        if (!start || !end) return 0;
-        const startD = new Date(start);
-        const endD = new Date(end);
-        const timeDiff = endD.getTime() - startD.getTime();
-        return Math.ceil(timeDiff / (1000 * 3600 * 24));
+    const calculateRentalDays = (startDate, endDate) => {
+        if (!startDate || !endDate) return 0;
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+
+        const diff = end - start;
+        return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
     };
 
     const rentalDays = calculateRentalDays(startDate, endDate);
@@ -112,6 +132,7 @@ const CartScreen = () => {
             endDate,
             rentalDays,
             totalPrice,
+            selectedVehicles: selectedVehicles,
         });
     };
 
@@ -125,9 +146,34 @@ const CartScreen = () => {
         });
     };
 
+    const handleClearCart = useCallback(async () => {
+        const userId = await getUserId();
+        if (!userId) return;
+
+        Alert.alert("Xác nhận", "Bạn muốn xoá toàn bộ giỏ hàng?", [
+            { text: "Huỷ" },
+            {
+                text: "Xoá",
+                onPress: async () => {
+                    try {
+                        await dispatch(clearCart(userId)).unwrap();
+                        fetchCartData();
+                    } catch {
+                        Alert.alert("Lỗi", "Không thể xoá giỏ hàng.");
+                    }
+                }
+            }
+        ]);
+    }, [dispatch, getUserId, fetchCartData]);
+
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Giỏ Hàng</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <Text style={[styles.title, { color: colors.text }]}>Giỏ Hàng</Text>
+                <TouchableOpacity onPress={handleClearCart}>
+                    <Icon name="delete-sweep" size={28} color={colors.text} />
+                </TouchableOpacity>
+            </View>
 
             {status === 'loading' ? (
                 <ActivityIndicator size="large" color="#0000ff" />
@@ -143,7 +189,7 @@ const CartScreen = () => {
                                 isSelected={selectedVehicles.includes(item?.vehicleId?._id)}
                                 onSelect={() => toggleVehicleSelection(item?.vehicleId?._id)}
                             />
-                        )}                        
+                        )}
                         keyExtractor={(item, index) =>
                             item?.vehicleId?._id?.toString() || `item-${index}`
                         }
@@ -160,7 +206,6 @@ const CartScreen = () => {
                         Tổng cộng: {totalPrice.toLocaleString()} VND
                     </Text>
 
-                    {/* Button to choose rental date */}
                     <TouchableOpacity
                         style={styles.button}
                         onPress={() => setShowModalDate(true)}
@@ -168,11 +213,10 @@ const CartScreen = () => {
                         <Text style={styles.buttonText}>Chọn ngày thuê</Text>
                     </TouchableOpacity>
 
-                    {/* Payment button - only enabled if dates are selected */}
                     <TouchableOpacity
                         style={[styles.button, { backgroundColor: startDate && endDate ? '#4CAF50' : '#9E9E9E' }]}
                         onPress={navigateToPaymentScreen}
-                        disabled={!startDate || !endDate} // Disable if dates are not selected
+                        disabled={!startDate || !endDate}
                     >
                         <Text style={styles.buttonText}>Thanh toán</Text>
                     </TouchableOpacity>

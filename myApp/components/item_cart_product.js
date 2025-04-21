@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Checkbox from './checkBox';
 import API_BASE_URL from '../localhost/localhost';
-import { AntDesign } from '@expo/vector-icons'; // icon trái tim
+import { AntDesign, Feather } from '@expo/vector-icons';
 
 const ItemCart = ({
     item,
@@ -15,6 +15,7 @@ const ItemCart = ({
     showRemove = true,
     showQuantityControls = true,
     isFavorite = false,
+    onPress,
 }) => {
     const vehicle = item?.vehicleId;
     const imageUrl = vehicle?.images?.[0]
@@ -22,66 +23,67 @@ const ItemCart = ({
         : 'https://via.placeholder.com/100';
 
     return (
-        <View style={styles.card}>
-            {onToggleFavorite && (
-                <TouchableOpacity onPress={onToggleFavorite} style={styles.heartBtn}>
-                    <AntDesign
-                        name={isFavorite ? 'heart' : 'hearto'}
-                        size={22}
-                        color={isFavorite ? 'red' : '#888'}
-                    />
-                </TouchableOpacity>
-            )}
+        <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+            <View style={styles.card}>
+                {onToggleFavorite && (
+                    <TouchableOpacity onPress={onToggleFavorite} style={styles.heartBtn}>
+                        <AntDesign
+                            name={isFavorite ? 'heart' : 'hearto'}
+                            size={22}
+                            color={isFavorite ? 'red' : '#888'}
+                        />
+                    </TouchableOpacity>
+                )}
 
-            <View style={styles.row}>
-                <Image source={{ uri: imageUrl }} style={styles.image} />
-                <View style={styles.infoContainer}>
-                    <View style={styles.header}>
-                        {showCheckbox ? (
-                            <Checkbox
-                                label={vehicle?.name || 'Không tên'}
-                                checked={isSelected}
-                                onChange={onSelect}
-                            />
-                        ) : (
-                            <Text style={styles.nameText}>{vehicle?.name || 'Không tên'}</Text>
-                        )}
-                    </View>
+                <View style={styles.row}>
+                    <Image source={{ uri: imageUrl }} style={styles.image} />
 
-                    <Text style={styles.price}>
-                        Giá thuê/ngày: {vehicle?.rentalPricePerDay?.toLocaleString()} VND
-                    </Text>
+                    <View style={styles.infoContainer}>
+                        <View style={styles.topSection}>
+                            {showCheckbox ? (
+                                <Checkbox
+                                    label={vehicle?.name || 'Không tên'}
+                                    checked={isSelected}
+                                    onChange={onSelect}
+                                />
+                            ) : (
+                                <Text style={styles.nameText}>{vehicle?.name || 'Không tên'}</Text>
+                            )}
+                            <Text style={styles.price}>
+                                Giá thuê/ngày: {vehicle?.rentalPricePerDay?.toLocaleString()} VND
+                            </Text>
+                        </View>
 
-                    <View style={styles.actions}>
-                        {showQuantityControls && (
-                            <>
-                                <Text style={styles.label}>Số lượng:</Text>
-                                <TouchableOpacity
-                                    onPress={() => onQuantityChange(item.quantity - 1)}
-                                    style={styles.qtyBtn}
-                                >
-                                    <Text style={styles.btnText}>-</Text>
+                        <View style={styles.actions}>
+                            {showQuantityControls && (
+                                <View style={styles.qtyContainer}>
+                                    <Text style={styles.label}>Số lượng:</Text>
+                                    <TouchableOpacity
+                                        onPress={() => onQuantityChange(item.quantity - 1)}
+                                        style={styles.qtyBtn}
+                                    >
+                                        <Text style={styles.btnText}>-</Text>
+                                    </TouchableOpacity>
+                                    <Text style={styles.qtyText}>{item.quantity}</Text>
+                                    <TouchableOpacity
+                                        onPress={() => onQuantityChange(item.quantity + 1)}
+                                        style={styles.qtyBtn}
+                                    >
+                                        <Text style={styles.btnText}>+</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {showRemove && (
+                                <TouchableOpacity onPress={onRemove} style={styles.iconRemoveBtn}>
+                                    <Feather name="trash-2" size={20} color="#fff" />
                                 </TouchableOpacity>
-                                <Text style={styles.qtyText}>{item.quantity}</Text>
-                                <TouchableOpacity
-                                    onPress={() => onQuantityChange(item.quantity + 1)}
-                                    style={styles.qtyBtn}
-                                >
-                                    <Text style={styles.btnText}>+</Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
-
-                        {showRemove && (
-                            <TouchableOpacity onPress={onRemove} style={styles.removeBtn}>
-                                <Text style={styles.removeText}>Xóa</Text>
-                            </TouchableOpacity>
-                        )}
+                            )}
+                        </View>
                     </View>
                 </View>
             </View>
-        </View>
-
+        </TouchableOpacity>
     );
 };
 
@@ -112,8 +114,8 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'space-between',
     },
-    header: {
-        marginBottom: 4,
+    topSection: {
+        marginBottom: 8,
     },
     nameText: {
         fontSize: 16,
@@ -123,12 +125,17 @@ const styles = StyleSheet.create({
     price: {
         fontSize: 14,
         color: '#444',
-        marginBottom: 6,
+        marginTop: 4,
     },
     actions: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        flexWrap: 'wrap',
+        flexWrap: 'nowrap',
+    },
+    qtyContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     label: {
         fontSize: 14,
@@ -153,16 +160,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
-    removeBtn: {
+    iconRemoveBtn: {
         backgroundColor: '#e74c3c',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
+        padding: 8,
         borderRadius: 6,
-        marginLeft: 10,
-    },
-    removeText: {
-        color: '#fff',
-        fontWeight: 'bold',
+        marginLeft: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     heartBtn: {
         position: 'absolute',

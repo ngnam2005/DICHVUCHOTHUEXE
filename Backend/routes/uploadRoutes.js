@@ -8,10 +8,10 @@ const router = express.Router();
 // Cấu hình lưu ảnh
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "uploads/comments/"); // 📌 Thư mục chứa ảnh
+        cb(null, "uploads/comments/"); //Thư mục chứa ảnh
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + "-" + file.originalname); // 📌 Đổi tên file tránh trùng
+        cb(null, Date.now() + "-" + file.originalname); //Đổi tên file tránh trùng
     }
 });
 

@@ -1,19 +1,14 @@
 const mongoose = require("mongoose");
-const { v4: uuidv4 } = require("uuid");
+const { v4: uuidv4 } = require("uuid");  // Thêm thư viện UUID
 
-const PaymentSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "Account", required: true },
-    order: { type: mongoose.Schema.Types.ObjectId, ref: "Order", required: true },
-    amountPaid: { type: Number, required: true },
-    paymentMethod: { type: String, enum: ["cash", "credit_card", "momo", "bank_transfer"], default: "cash" },
-    status: { type: String, enum: ["pending", "success", "failed"], default: "pending" },
-    transactionId: { type: String, unique: true, default: uuidv4 },
-    paymentDate: { type: Date, default: Date.now },
-    status: {
-        type: String,
-        enum: ['Chờ nhận xe', 'Thành công', 'Đã hủy'],
-        default: 'Chờ nhận xe'
-    }
+const paymentSchema = new mongoose.Schema({
+    orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Account", required: true },
+    amount: { type: Number, required: true },
+    method: { type: String, enum: ['Tiền mặt', 'Chuyển khoản'], required: true },
+    status: { type: String, enum: ['Chờ xử lý', 'Đã thanh toán', 'Thất bại'], default: 'Chờ xử lý' },
+    paidAt: { type: Date }, // thời gian đã thanh toán
+    transactionId: { type: String, unique: true, required: true, default: uuidv4 },  // Thêm transactionId
 }, { timestamps: true });
 
-module.exports = mongoose.model("Payment", PaymentSchema);
+module.exports = mongoose.model("Payment", paymentSchema);

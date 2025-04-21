@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert
+    View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -37,7 +37,7 @@ const DetailVehicleScreen = ({ navigation }) => {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/comments/${vehicleId}`);
             setComments(response.data.comments);
-        } catch (error) {}
+        } catch (error) { }
     };
 
     const handleAddToCart = () => {
@@ -51,125 +51,131 @@ const DetailVehicleScreen = ({ navigation }) => {
             rentalDates: selectedDates
         };
         dispatch(addVehicleToCart(vehicleData));
-        navigation.navigate('Cart');
+        Alert.alert("Thành công", "Thêm xe vào giỏ hàng thành công !");
     };
 
     const handleCommentSent = () => {
         fetchComments();
     };
 
+    const calculateRentalDays = (startDate, endDate) => {
+        if (!startDate || !endDate) return 0;
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+
+        const diff = end - start;
+        return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+    };
+
     return (
-        <View style={{ flex: 1 }}>
-            {/* Header không nằm trong ScrollView */}
-            <Header title={vehicle?.name} hideUser={true} />
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                <View style={{ flex: 1 }}>
+                    <Header title={vehicle?.name} hideUser={true} />
+                    <ScrollView contentContainerStyle={styles.container}>
+                        {vehicle?.images?.length > 0 && (
+                            <Image
+                                source={{ uri: `${API_BASE_URL}${vehicle.images[currentImageIndex]}` }}
+                                style={styles.vehicleImage}
+                            />
+                        )}
+                        <ScrollView horizontal style={styles.thumbnailList}>
+                            {vehicle?.images?.map((item, index) => (
+                                <TouchableOpacity key={index} onPress={() => setCurrentImageIndex(index)}>
+                                    <Image source={{ uri: `${API_BASE_URL}${item}` }} style={styles.thumbnailImage} />
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
 
-            {/* Nội dung cuộn */}
-            <ScrollView contentContainerStyle={styles.container}>
-                {vehicle?.images?.length > 0 && (
-                    <Image
-                        source={{ uri: `${API_BASE_URL}${vehicle.images[currentImageIndex]}` }}
-                        style={styles.vehicleImage}
-                    />
-                )}
+                        <Text style={styles.vehicleName}>{vehicle?.name}</Text>
+                        <Text style={styles.vehiclePrice}>{vehicle?.rentalPricePerDay?.toLocaleString()} VND/ngày</Text>
+                        <Text style={styles.vehicleDescription}>{vehicle?.description}</Text>
 
-                {/* Ảnh nhỏ – không dùng FlatList */}
-                <ScrollView horizontal style={styles.thumbnailList}>
-                    {vehicle?.images?.map((item, index) => (
-                        <TouchableOpacity key={index} onPress={() => setCurrentImageIndex(index)}>
-                            <Image source={{ uri: `${API_BASE_URL}${item}` }} style={styles.thumbnailImage} />
+                        <TouchableOpacity style={styles.btn} onPress={() => setModalVisible(true)}>
+                            <Text style={styles.btnText}>Chọn ngày thuê</Text>
                         </TouchableOpacity>
-                    ))}
-                </ScrollView>
 
-                <Text style={styles.vehicleName}>{vehicle?.name}</Text>
-                <Text style={styles.vehiclePrice}>{vehicle?.rentalPricePerDay?.toLocaleString()} VND/ngày</Text>
-                <Text style={styles.vehicleDescription}>{vehicle?.description}</Text>
+                        <ModalDate
+                            isVisible={isModalVisible}
+                            onConfirm={(dates) => setSelectedDates(dates)}
+                            onClose={() => setModalVisible(false)}
+                        />
 
-                <TouchableOpacity style={styles.btn} onPress={() => setModalVisible(true)}>
-                    <Text style={styles.btnText}>Chọn ngày thuê</Text>
-                </TouchableOpacity>
+                        <TouchableOpacity style={styles.btn} onPress={handleAddToCart}>
+                            <Text style={styles.btnText}>Thêm vào giỏ hàng</Text>
+                        </TouchableOpacity>
 
-                <ModalDate
-                    isVisible={isModalVisible}
-                    onConfirm={(dates) => setSelectedDates(dates)}
-                    onClose={() => setModalVisible(false)}
-                />
-
-                <TouchableOpacity style={styles.btn} onPress={handleAddToCart}>
-                    <Text style={styles.btnText}>Thêm vào giỏ hàng</Text>
-                </TouchableOpacity>
-
-                {selectedDates && (
-                    <TouchableOpacity
-                        style={[styles.btn, { backgroundColor: '#28a745' }]}
-                        onPress={() => {
-                            if (!selectedDates?.startDate || !selectedDates?.endDate) {
-                                Alert.alert("Lỗi", "Vui lòng chọn ngày thuê trước khi thanh toán");
-                                return;
-                            }
-
-                            const startDate = selectedDates.startDate;
-                            const endDate = selectedDates.endDate;
-
-                            const start = new Date(startDate);
-                            const end = new Date(endDate);
-                            const rentalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-                            const totalPrice = rentalDays * vehicle.rentalPricePerDay;
-
-                            const cart = {
-                                vehicles: [
-                                    {
-                                        vehicleId: {
-                                            _id: vehicle._id,
-                                            name: vehicle.name,
-                                            image: vehicle.images[0],
-                                            rentalPricePerDay: vehicle.rentalPricePerDay,
-                                            images: vehicle.images,
-                                        },
-                                        quantity: 1
+                        {selectedDates && (
+                            <TouchableOpacity
+                                style={[styles.btn, { backgroundColor: '#28a745' }]}
+                                onPress={() => {
+                                    if (!selectedDates?.startDate || !selectedDates?.endDate) {
+                                        Alert.alert("Lỗi", "Vui lòng chọn ngày thuê trước khi thanh toán");
+                                        return;
                                     }
-                                ]
-                            };
 
-                            navigation.navigate('Payment', {
-                                cart,
-                                startDate,
-                                endDate,
-                                rentalDays,
-                                totalPrice
-                            });
-                        }}
-                    >
-                        <Text style={styles.btnText}>Thanh toán</Text>
-                    </TouchableOpacity>
-                )}
+                                    const rentalDays = calculateRentalDays(selectedDates.startDate, selectedDates.endDate);
+                                    const totalPrice = rentalDays * vehicle.rentalPricePerDay;
 
-                <Text style={styles.sectionTitle}>Bình luận</Text>
+                                    const cart = {
+                                        vehicles: [
+                                            {
+                                                vehicleId: {
+                                                    _id: vehicle._id,
+                                                    name: vehicle.name,
+                                                    image: vehicle.images[0],
+                                                    rentalPricePerDay: vehicle.rentalPricePerDay,
+                                                    images: vehicle.images,
+                                                },
+                                                quantity: 1
+                                            }
+                                        ]
+                                    };
 
-                <InputComment
-                    vehicleId={vehicleId}
-                    vehicleName={vehicle?.name}
-                    user={{ id: 'user123', fullname: 'Nguyễn Văn A', avatar: 'path/to/avatar.jpg' }}
-                    onCommentSent={handleCommentSent}
-                />
+                                    navigation.navigate('Payment', {
+                                        cart,
+                                        startDate: selectedDates.startDate,
+                                        endDate: selectedDates.endDate,
+                                        rentalDays,
+                                        totalPrice
+                                    });
+                                }}
+                            >
+                                <Text style={styles.btnText}>Thanh toán</Text>
+                            </TouchableOpacity>
+                        )}
 
-                {comments.length === 0 ? (
-                    <Text style={styles.noComments}>Chưa có bình luận nào</Text>
-                ) : (
-                    (showAllComments ? comments : comments.slice(0, 5)).map((item) => (
-                        <ItemComment key={item._id} comment={item} />
-                    ))
-                )}
+                        <Text style={styles.sectionTitle}>Bình luận</Text>
 
-                {comments.length > 5 && (
-                    <TouchableOpacity onPress={() => setShowAllComments(!showAllComments)}>
-                        <Text style={styles.showMore}>
-                            {showAllComments ? 'Thu gọn' : 'Xem thêm bình luận'}
-                        </Text>
-                    </TouchableOpacity>
-                )}
-            </ScrollView>
-        </View>
+                        <InputComment
+                            vehicleId={vehicleId}
+                            vehicleName={vehicle?.name}
+                            onCommentSent={handleCommentSent}
+                        />
+
+                        {comments.length === 0 ? (
+                            <Text style={styles.noComments}>Chưa có bình luận nào</Text>
+                        ) : (
+                            (showAllComments ? comments : comments.slice(0, 5)).map((item) => (
+                                <ItemComment key={item._id} comment={item} />
+                            ))
+                        )}
+
+                        {comments.length > 5 && (
+                            <TouchableOpacity onPress={() => setShowAllComments(!showAllComments)}>
+                                <Text style={styles.showMore}>
+                                    {showAllComments ? 'Thu gọn' : 'Xem thêm bình luận'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </ScrollView>
+                </View>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 };
 

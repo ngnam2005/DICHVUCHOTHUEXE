@@ -24,8 +24,9 @@ const HomeScreen = () => {
     const [favorites, setFavorites] = useState([]);
     const { user } = useSelector((state) => state.auth);
     const [searchText, setSearchText] = useState("");
+    console.log({ ItemVehicle, ItemType, Banner, SearchBar });
 
-    // Fetch favorites from AsyncStorage on focus
+
     useFocusEffect(
         React.useCallback(() => {
             const fetchFavorites = async () => {
@@ -40,7 +41,6 @@ const HomeScreen = () => {
         }, [])
     );
 
-    // Handle toggling vehicle favorites
     const toggleFavorite = async (vehicle) => {
         let updatedFavorites;
         if (favorites.find((v) => v._id === vehicle._id)) {
@@ -52,13 +52,12 @@ const HomeScreen = () => {
         await AsyncStorage.setItem("favorites", JSON.stringify(updatedFavorites));
     };
 
-    // Fetch vehicle types and vehicles on mount
+
     useEffect(() => {
         if (statusTypes === "idle") dispatch(fetchTypes());
         if (statusVehicles === "idle") dispatch(fetchVehicles());
     }, [dispatch, statusTypes, statusVehicles]);
 
-    // Refresh function to reload vehicle types and vehicles
     const onRefresh = () => {
         setRefreshing(true);
         dispatch(fetchTypes());
@@ -66,14 +65,13 @@ const HomeScreen = () => {
         setTimeout(() => setRefreshing(false), 1000);
     };
 
-    // Handle adding vehicle to cart
     const handleAddToCart = async (vehicleId) => {
         if (!user || !user.id) {
             Alert.alert("Thông báo", "Bạn cần đăng nhập để thêm vào giỏ hàng.");
             return;
         }
 
-        const vehicle = vehicles.find((v) => v._id === vehicleId); // Find the vehicle
+        const vehicle = vehicles.find((v) => v._id === vehicleId);
         if (!vehicle) {
             Alert.alert("Lỗi", "Xe không tồn tại");
             return;
@@ -90,27 +88,30 @@ const HomeScreen = () => {
         };
 
         try {
-            // Add vehicle to cart
+
             const response = await dispatch(addVehicleToCart({ userId: user.id, vehicleData }));
 
             if (response?.meta?.requestStatus === "fulfilled") {
                 Alert.alert("Thành công", "Đã thêm vào giỏ hàng!");
-                dispatch(getCartByUserId(user.id)); // Refresh cart
+                dispatch(getCartByUserId(user.id));
             } else {
-                Alert.alert("Lỗi", "Không thể thêm vào giỏ hàng.");
+                Alert.alert("Lỗi", "Sản phẩm trong giỏ hàng đã đạt đến giới hạn trong kho.");
             }
         } catch (err) {
             Alert.alert("Lỗi", "Không thể thêm vào giỏ hàng.");
         }
     };
 
-    // Handle navigation to DetailVehicleScreen
     const navigateToDetail = (vehicleId) => {
-        navigation.navigate("DetailVehicleScreen", { vehicleId }); // Navigate to the DetailVehicleScreen with vehicleId
+        navigation.navigate("DetailVehicleScreen", { vehicleId });
     };
     const handleSearchPress = () => {
         navigation.navigate("SearchScreen", { keyword: searchText });
     };
+    const handleTypePress = (type) => {
+        navigation.navigate("VehicleByType", { typeId: type._id, typeName: type.name });
+    };
+
 
     return (
         <View style={styles.container}>
@@ -133,7 +134,7 @@ const HomeScreen = () => {
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 >
                     {types.map((type) => (
-                        <ItemType key={type._id} type={type} />
+                        <ItemType key={type._id} type={type} onPress={handleTypePress} />
                     ))}
                 </ScrollView>
             )}
@@ -149,7 +150,7 @@ const HomeScreen = () => {
                             onAddToCart={() => handleAddToCart(item._id)}
                             onToggleFavorite={() => toggleFavorite(item)}
                             isFavorite={favorites.some((v) => v._id === item._id)}
-                            onPress={() => navigateToDetail(item._id)} // Add onPress to navigate to the DetailVehicleScreen
+                            onPress={() => navigateToDetail(item._id)}
                         />
                     )}
                     keyExtractor={(item) => item._id.toString()}
@@ -179,6 +180,7 @@ const styles = StyleSheet.create({
     typeContainer: {
         paddingHorizontal: 15,
         paddingBottom: 10,
+        marginBottom: 20
     },
     vehicleRow: {
         justifyContent: "space-between",

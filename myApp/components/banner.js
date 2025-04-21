@@ -44,8 +44,6 @@ const Banner = () => {
                     </View>
                 ))}
             </ScrollView>
-
-            {/* Dấu chấm chỉ mục */}
             <View style={styles.indicatorContainer}>
                 {images.map((_, index) => (
                     <View

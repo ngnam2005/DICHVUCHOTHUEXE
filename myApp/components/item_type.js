@@ -1,37 +1,32 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
-import API_BASE_URL from "../localhost/localhost"; // Import đường dẫn API
+import { TouchableOpacity, Image, Text, StyleSheet } from "react-native";
+import API_BASE_URL from "../localhost/localhost"; // Nhớ chỉnh đường dẫn nếu khác
 
-const ItemType = ({ type }) => {
-    // Kiểm tra đường dẫn ảnh
+const ItemType = ({ type, onPress }) => {
     const imageUrl = type.image.startsWith("http") ? type.image : `${API_BASE_URL}${type.image}`;
-    console.log("🛑 Type Image URL:", imageUrl);
 
     return (
-        <View style={styles.container}>
+        <TouchableOpacity style={styles.container} onPress={() => onPress(type)}>
             <Image source={{ uri: imageUrl }} style={styles.image} />
             <Text style={styles.name}>{type.name}</Text>
-        </View>
+        </TouchableOpacity>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         alignItems: "center",
-        margin: 10,
-        height: 150,
+        marginRight: 12,
     },
     image: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+        width: 50,
+        height: 50,
+        borderRadius: 35,
         marginBottom: 5,
-        resizeMode: "contain",
     },
     name: {
         fontSize: 14,
-        fontWeight: "bold",
-        color: "#333",
+        fontWeight: "500",
     },
 });
 

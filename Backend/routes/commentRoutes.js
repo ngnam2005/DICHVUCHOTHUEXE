@@ -7,7 +7,7 @@ const Account = require("../models/Account");
 const Vehicle = require("../models/Vehicle");
 const uploadComment = require('../config/multerComment');
 
-// 👉 API thêm bình luận
+// API thêm bình luận
 router.post("/", uploadComment.array("images", 5), async (req, res) => {
     const { userId, vehicleId, content } = req.body;
     const files = req.files;
@@ -62,7 +62,7 @@ router.post("/", uploadComment.array("images", 5), async (req, res) => {
 });
 
 
-// 👉 API Lấy tất cả bình luận của xe
+//API Lấy tất cả bình luận của xe
 router.get("/:vehicleId", async (req, res) => {
     const { vehicleId } = req.params;
 
@@ -82,7 +82,7 @@ router.get("/:vehicleId", async (req, res) => {
     }
 });
 
-// 👉 API Cập nhật bình luận
+//API Cập nhật bình luận
 router.put("/:commentId", async (req, res) => {
     const { commentId } = req.params;
     const { userId, content, images = [] } = req.body;

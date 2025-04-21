@@ -9,7 +9,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
-const notificationRoutes = require("./routes/notification");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 require("dotenv").config();
 connectDB(); // Kết nối MongoDB

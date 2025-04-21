@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { changePassword } from '../redux/slices/authSlice';
+import Header from '../components/header';
+import WrapInput from '../components/inputText';
 
 const ChangePassScreen = ({ navigation }) => {
   const dispatch = useDispatch();
-  const userInfo = useSelector((state) => state.auth.user);
-  const { loading, successMessage, errorChangePassword } = useSelector((state) => state.auth);
+  const { user: userInfo, loading, successMessage, errorChangePassword } = useSelector((state) => state.auth);
   const email = userInfo?.email;
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -15,15 +16,12 @@ const ChangePassScreen = ({ navigation }) => {
 
   const handleChangePassword = () => {
     if (!email) return Alert.alert("Lỗi", "Không tìm thấy email người dùng!");
-
     if (!currentPassword || !newPassword || !confirmPassword) {
       return Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin!');
     }
-
     if (newPassword !== confirmPassword) {
       return Alert.alert('Lỗi', 'Mật khẩu xác nhận không trùng khớp!');
     }
-
     if (newPassword.length < 6) {
       return Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự!');
     }
@@ -31,62 +29,82 @@ const ChangePassScreen = ({ navigation }) => {
     dispatch(changePassword({ email, currentPassword, newPassword }));
   };
 
-  // Hiển thị thông báo sau khi đổi mật khẩu
   useEffect(() => {
     if (successMessage) {
       Alert.alert('Thành công', successMessage, [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
     }
-
     if (errorChangePassword) {
       Alert.alert('Lỗi', errorChangePassword);
     }
   }, [successMessage, errorChangePassword]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Đổi mật khẩu</Text>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <Header title="Đổi mật khẩu" hideUser />
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}>Thay đổi mật khẩu</Text>
 
-      <TextInput
-        placeholder="Mật khẩu hiện tại"
-        secureTextEntry
-        value={currentPassword}
-        onChangeText={setCurrentPassword}
-        style={styles.input}
-      />
+        <WrapInput
+          placeholder="Mật khẩu hiện tại"
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          secureTextEntry
+          eyePass
+        />
 
-      <TextInput
-        placeholder="Mật khẩu mới"
-        secureTextEntry
-        value={newPassword}
-        onChangeText={setNewPassword}
-        style={styles.input}
-      />
+        <WrapInput
+          placeholder="Mật khẩu mới"
+          value={newPassword}
+          onChangeText={setNewPassword}
+          secureTextEntry
+          eyePass
+        />
 
-      <TextInput
-        placeholder="Xác nhận mật khẩu"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        style={styles.input}
-      />
+        <WrapInput
+          placeholder="Xác nhận mật khẩu"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          eyePass
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleChangePassword} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Xác nhận</Text>}
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleChangePassword} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Xác nhận</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
+
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#fff' },
-    title: { fontSize: 22, fontWeight: 'bold', marginBottom: 25, textAlign: 'center', color: '#333' },
-    input: {
-      borderWidth: 1, borderColor: '#ccc',
-      paddingHorizontal: 15, paddingVertical: 10,
-      borderRadius: 8, marginBottom: 15
-    },
-    button: { backgroundColor: '#28a745', paddingVertical: 12, borderRadius: 8 },
-    buttonText: { color: '#fff', fontSize: 16, textAlign: 'center' }
-  });
+  container: {
+    padding: 20,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 25,
+    textAlign: 'center',
+    color: '#333',
+  },
+  button: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+});
+
 export default ChangePassScreen;

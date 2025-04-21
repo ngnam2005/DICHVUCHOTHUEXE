@@ -23,8 +23,6 @@ const LoginScreen = ({ navigation }) => {
     
         try {
             const user = await dispatch(loginUser({ nameAccount, password })).unwrap();
-    
-            // ✅ Lưu user duy nhất vào AsyncStorage
             await AsyncStorage.setItem("user", JSON.stringify(user));
     
             Alert.alert("Login success", `Welcome, ${user?.fullname || "User"}!`);
@@ -42,7 +40,7 @@ const LoginScreen = ({ navigation }) => {
                     const user = JSON.parse(savedUser);
                     setNameAccount(user.nameAccount || "");
                     setPassword(user.password || "");
-                    setRememberMe(true); // nếu có dữ liệu là user, mặc định bật Remember Me
+                    setRememberMe(true);
                 }
             } catch (error) {
                 console.error("Failed to load saved credentials", error);

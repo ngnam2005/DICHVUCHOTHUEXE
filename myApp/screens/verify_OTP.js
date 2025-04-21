@@ -28,7 +28,7 @@ const VerifyOtpScreen = ({ navigation, route }) => {
                 navigation.navigate("Auth");
             }, 3000);
         } catch (error) {
-            setVerificationStatus("error"); // Đặt trạng thái thất bại
+            setVerificationStatus("error"); 
         }
     };
 
@@ -83,8 +83,6 @@ const styles = StyleSheet.create({
     subtitle: { fontSize: 16, color: "#666", textAlign: "center", marginBottom: 20 },
     resendText: { fontSize: 16, color: "#666" },
     resendLink: { fontSize: 16, color: "#FF5722", fontWeight: "bold" },
-
-    // Thêm style cho thông báo OTP
     successText: { fontSize: 16, color: "green", fontWeight: "bold", marginTop: 10 },
     errorText: { fontSize: 16, color: "red", fontWeight: "bold", marginTop: 10 },
 });

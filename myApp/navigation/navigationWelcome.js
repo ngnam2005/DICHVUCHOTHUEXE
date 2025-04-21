@@ -17,6 +17,8 @@ import UpdateProfileScreen from "../screens/UpdateProfileSceen";
 import ChangePassScreen from "../screens/ChangePassScreen";
 import DetailVehicleScreen from "../screens/DetailVehicleScreen";
 import SearchScreen from "../screens/SearchScreen";
+import NotificationScreen from "../screens/NotificationScreen";
+import VehicleByTypeScreen from "../screens/VehicleByTypeScreen";
 
 
 
@@ -46,6 +48,9 @@ const NavigationWelcome = () => (
         <Stack.Screen name="ChangePass" component={ChangePassScreen}/>
         <Stack.Screen name="DetailVehicleScreen" component={DetailVehicleScreen}/>
         <Stack.Screen component={SearchScreen} name="SearchScreen"/>
+        <Stack.Screen component={NotificationScreen} name="Notification"/>
+        <Stack.Screen component={VehicleByTypeScreen} name="VehicleByType"/>
+        
       </Stack.Navigator>
     </NavigationContainer>
   </Provider>

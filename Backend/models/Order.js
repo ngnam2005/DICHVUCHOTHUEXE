@@ -19,13 +19,13 @@ const orderSchema = new mongoose.Schema({
     rentalEndDate: { type: Date, required: true },
     rentalDays: { type: Number, required: true },
     totalPrice: { type: Number, required: true },
-    status: { type: String, default: "Đã thanh toán" },
+    status: { type: String, default: "Chờ nhận xe" },
     
     // 👉 Thêm phương thức thanh toán:
-    paymentMethod: {
+    paymentStatus: {
         type: String,
-        enum: ['Tiền mặt', 'Chuyển khoản'],
-        required: true
+        enum: ['Chưa thanh toán', 'Đã thanh toán'],
+        default: 'Chưa thanh toán'
     }
 }, { timestamps: true });
 

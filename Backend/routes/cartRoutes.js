@@ -3,8 +3,8 @@ const Cart = require("../models/Cart");
 const Vehicle = require("../models/Vehicle");
 const router = express.Router();
 
-// Add vehicle to cart
-// ADD: Thêm vehicle vào giỏ hàng
+
+//Thêm vào giỏ hàng
 router.post("/add", async (req, res) => {
     const { userId, vehicleId, name, image, rentalPricePerDay, quantity = 1, rentalStartDate, rentalEndDate } = req.body;
 
@@ -70,7 +70,7 @@ router.post("/add", async (req, res) => {
     }
 });
 
-// PUT: Update quantity of a vehicle in cart
+//Thay đổi số lượng trong giỏ hàng 
 router.put("/:userId/vehicle/:vehicleId", async (req, res) => {
     const { userId, vehicleId } = req.params;
     const { quantity } = req.body;
@@ -105,7 +105,7 @@ router.put("/:userId/vehicle/:vehicleId", async (req, res) => {
 });
 
 
-// GET cart by user with populated vehicle info
+//Lấy danh sách giỏ hàng theo User ID
 router.get("/:userId", async (req, res) => {
     try {
         const cart = await Cart.findOne({ user: req.params.userId }).populate("vehicles.vehicleId");
@@ -116,7 +116,7 @@ router.get("/:userId", async (req, res) => {
 });
 
 
-// DELETE: Xóa một vehicle khỏi giỏ hàng của user
+//Xóa xe ra khỏi giỏ hàng 
 router.delete("/:userId/vehicle/:vehicleId", async (req, res) => {
     const { userId, vehicleId } = req.params;
 
@@ -150,6 +150,28 @@ router.delete("/:userId/vehicle/:vehicleId", async (req, res) => {
         res.status(500).json({ error: "Failed to remove vehicle from cart" });
     }
 });
+
+router.delete('/:userId/clear', async (req, res) => {
+    try {
+        const { userId } = req.params; // ✅ lấy userId đúng vị trí
+        console.log("Clear cart request received for user:", userId);
+
+        const cart = await Cart.findOne({ user: userId });
+        if (!cart) {
+            return res.status(404).json({ error: 'Cart not found' });
+        }
+
+        cart.vehicles = [];
+        cart.totalPrice = 0;
+
+        await cart.save();
+        res.status(200).json({ message: 'Cart cleared successfully', cart });
+    } catch (error) {
+        console.error('Error clearing cart:', error);
+        res.status(500).json({ error: 'Failed to clear cart' });
+    }
+});
+
 
 
 

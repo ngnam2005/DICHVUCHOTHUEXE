@@ -4,7 +4,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
 
 const Header = ({ title, hideIcon, hideTitle, user, hideUser }) => {
-    const navigation = useNavigation(); // 🛠️ Lấy navigation từ React Navigation
+    const navigation = useNavigation(); 
 
     return (
         <View style={styles.headerContainer}>

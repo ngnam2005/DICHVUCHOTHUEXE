@@ -64,7 +64,7 @@ const ProfileScreen = () => {
                 <Switch value={isDarkMode} onValueChange={toggleTheme} />
             </View>
 
-            <TouchableOpacity style={[styles.option, { borderBottomColor: colors.border }]}>
+            <TouchableOpacity style={[styles.option, { borderBottomColor: colors.border }]} onPress={() => handleScreen("Notification")}>
                 <Text style={{ color: colors.text }}>Thông báo</Text>
             </TouchableOpacity>
 

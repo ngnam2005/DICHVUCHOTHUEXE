@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order");
+const Notification = require("../models/Notification");
+const Payment = require("../models/Payment");
 
-// ✅ Tạo đơn hàng
+//Tạo đơn hàng
 router.post("/create", async (req, res) => {
     const {
         user,
@@ -14,11 +16,15 @@ router.post("/create", async (req, res) => {
         paymentMethod
     } = req.body;
 
+    if (!user || !user._id || !vehicles || vehicles.length === 0) {
+        return res.status(400).json({ error: "Thiếu thông tin đơn hàng." });
+    }
+
     try {
-        // Kiểm tra dữ liệu đầu vào
-        if (!user || !user._id || !vehicles || vehicles.length === 0) {
-            return res.status(400).json({ error: "Thiếu thông tin đơn hàng." });
-        }
+        const vehicleNames = vehicles.map(v => v.name).join(", ");
+
+        // Cập nhật trạng thái thanh toán theo phương thức thanh toán
+        const paymentStatus = paymentMethod === 'Chuyển khoản' ? "Đã thanh toán" : "Chưa thanh toán";
 
         const newOrder = new Order({
             user,
@@ -27,20 +33,44 @@ router.post("/create", async (req, res) => {
             rentalEndDate: new Date(rentalEndDate),
             rentalDays,
             totalPrice,
-            paymentMethod: paymentMethod || "Tiền mặt",
-            status: 'Chờ nhận xe'
+            status: "Chờ nhận xe",
+            paymentStatus  // Sử dụng paymentStatus đã xác định
         });
 
         await newOrder.save();
-        res.status(201).json({ message: "Tạo đơn hàng thành công", order: newOrder });
 
+        //Tạo bản ghi thanh toán
+        const newPayment = new Payment({
+            orderId: newOrder._id,
+            userId: user._id,
+            amount: totalPrice,
+            method: paymentMethod,
+            status: paymentStatus === 'Đã thanh toán' ? "Đã thanh toán" : "Chờ xử lý"  // Cập nhật trạng thái thanh toán
+        });
+
+        await newPayment.save();
+
+        //Gửi thông báo
+        const newNotification = new Notification({
+            userId: user._id,
+            title: "Đặt hàng thành công",
+            message: `${user.fullname} đã đặt xe ${vehicleNames} vào lúc ${new Date().toLocaleString()}`
+        });
+        await newNotification.save();
+
+        res.status(201).json({
+            message: "Tạo đơn hàng và thanh toán thành công",
+            order: newOrder,
+            payment: newPayment
+        });
     } catch (err) {
         console.error("Lỗi tạo đơn hàng:", err);
         res.status(500).json({ error: "Lỗi máy chủ khi tạo đơn hàng" });
     }
 });
 
-// ✅ Lấy đơn hàng theo userId
+
+//Lấy đơn hàng theo userId
 router.get('/getOrderById/:userId', async (req, res) => {
     try {
         const orders = await Order.find({ 'user._id': req.params.userId }).sort({ createdAt: -1 });
@@ -51,7 +81,7 @@ router.get('/getOrderById/:userId', async (req, res) => {
     }
 });
 
-// ✅ Hủy đơn hàng
+//Hủy đơn hàng
 router.put('/cancel/:orderId', async (req, res) => {
     try {
         const order = await Order.findById(req.params.orderId);

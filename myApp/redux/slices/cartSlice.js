@@ -60,6 +60,18 @@ export const removeVehicleFromCart = createAsyncThunk(
     }
 );
 
+export const clearCart = createAsyncThunk(
+    'cart/clearCart',
+    async (userId, { rejectWithValue }) => {
+        try {
+            await axios.delete(`${API_BASE_URL}/api/cart/${userId}/clear`);
+            return userId;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
 // Initial state
 const initialState = {
     cart: {
@@ -132,7 +144,19 @@ const cartSlice = createSlice({
             .addCase(removeVehicleFromCart.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload;
-            });
+            })
+            .addCase(clearCart.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(clearCart.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.cart.vehicles = []; 
+            })
+            .addCase(clearCart.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
+            })
+            
     },
 });
 

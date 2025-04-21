@@ -6,6 +6,8 @@ const Account = require('../models/Account');
 const upload = require('../config/multer');
 const jwt = require("jsonwebtoken");
 
+const Notification = require("../models/Notification");
+
 require("dotenv").config();
 
 const router = express.Router();
@@ -15,7 +17,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // Debug JWT_SECRET
 console.log("JWT_SECRET:", JWT_SECRET);
 
-// 📌 API Đăng nhập
+//API Đăng nhập
 router.post('/login', async (req, res) => {
     try {
         const { nameAccount, password } = req.body;
@@ -32,7 +34,12 @@ router.post('/login', async (req, res) => {
 
 
         const token = jwt.sign({ id: account._id, nameAccount: account.nameAccount }, JWT_SECRET, { expiresIn: '2h' });
-
+        const loginNoti = new Notification({
+            userId: account._id,
+            title: "Đăng nhập thành công",
+            message: `Bạn đã đăng nhập vào lúc ${new Date().toLocaleString()}`
+          });
+        await loginNoti.save();
         res.json({
             message: 'Đăng nhập thành công!',
             token,
@@ -53,7 +60,7 @@ router.post('/login', async (req, res) => {
 });
 
 
-// 📌 API Đăng ký tài khoản
+//API Đăng ký tài khoản
 router.post('/register', upload.single('avatar'), async (req, res) => {
     try {
         console.log("File nhận được:", req.file);
@@ -62,7 +69,6 @@ router.post('/register', upload.single('avatar'), async (req, res) => {
         const { nameAccount, email, password, fullname, phone, birthday, role } = req.body;
         let errors = [];
 
-        // 1️⃣ Kiểm tra các trường bắt buộc không được để trống
         if (!nameAccount) errors.push("- Tên tài khoản không được để trống.\n");
         if (!email) errors.push("- Email không được để trống.\n");
         if (!password) errors.push("- Mật khẩu không được để trống.\n");
@@ -70,34 +76,28 @@ router.post('/register', upload.single('avatar'), async (req, res) => {
         if (!phone) errors.push("- Số điện thoại không được để trống.\n");
         if (!birthday) errors.push("- Ngày sinh không được để trống.\n");
 
-        // 2️⃣ Kiểm tra độ dài tên tài khoản
         if (nameAccount && nameAccount.length < 3) {
             errors.push("- Tên tài khoản phải có ít nhất 3 ký tự.\n");
         }
 
-        // 3️⃣ Kiểm tra email hợp lệ
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (email && !emailRegex.test(email)) {
             errors.push("- Email không hợp lệ.\n");
         }
 
-        // 4️⃣ Kiểm tra mật khẩu có ít nhất 6 ký tự
         if (password && password.length < 6) {
             errors.push("- Mật khẩu phải có ít nhất 6 ký tự.\n");
         }
 
-        // 5️⃣ Kiểm tra số điện thoại hợp lệ (Việt Nam: bắt đầu bằng 0 và có 10 hoặc 11 số)
         const phoneRegex = /^0\d{9,10}$/;
         if (phone && !phoneRegex.test(phone)) {
             errors.push("- Số điện thoại không hợp lệ.\n");
         }
 
-        // 7️⃣ Kiểm tra role hợp lệ (chỉ cho phép "User" hoặc "Admin")
         if (role && role !== "User" && role !== "Admin") {
             errors.push("- Vai trò không hợp lệ, chỉ chấp nhận 'User' hoặc 'Admin'.\n");
         }
 
-        // 8️⃣ Kiểm tra tài khoản hoặc email đã tồn tại chưa
         const existingAccount = await Account.findOne({
             $or: [{ nameAccount }, { email }]
         });
@@ -106,15 +106,13 @@ router.post('/register', upload.single('avatar'), async (req, res) => {
             errors.push("- Tên tài khoản hoặc email đã được sử dụng, vui lòng thử lại!\n");
         }
 
-        // 🛑 Nếu có lỗi, trả về toàn bộ danh sách lỗi
         if (errors.length > 0) {
             return res.status(400).json({ errors });
         }
 
-        // 9️⃣ Xử lý avatar
         const avatar = req.file ? `/uploads/${req.file.filename}` : '';
 
-        // 🔟 Tạo tài khoản mới
+
         const newAccount = new Account({
             nameAccount,
             email,
@@ -135,7 +133,7 @@ router.post('/register', upload.single('avatar'), async (req, res) => {
 });
 
 
-// 📌 API Quên mật khẩu (Gửi OTP)
+// API Quên mật khẩu (Gửi OTP)
 router.post('/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
@@ -171,7 +169,7 @@ router.post('/forgot-password', async (req, res) => {
     }
 });
 
-// 📌 API Xác thực OTP và đặt lại mật khẩu
+//API Xác thực OTP và đặt lại mật khẩu
 router.post('/verify-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -210,7 +208,7 @@ router.post('/verify-otp', async (req, res) => {
 });
 
 
-// 📌 API Gửi Mật Khẩu Mới Sau Khi Xác Thực OTP
+//API Gửi Mật Khẩu Mới Sau Khi Xác Thực OTP
 router.post('/reset-password', async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -222,7 +220,7 @@ router.post('/reset-password', async (req, res) => {
         if (!account)
             return res.status(404).json({ message: 'Email không tồn tại!' });
         // Tạo mật khẩu mới ngẫu nhiên
-        const newPassword = crypto.randomBytes(6).toString('hex'); // VD: 'a1b2c3d4'
+        const newPassword = crypto.randomBytes(6).toString('hex');
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         // Cập nhật mật khẩu mới trong database
         await Account.findOneAndUpdate({ email }, { password: hashedPassword });
@@ -245,13 +243,12 @@ router.post('/reset-password', async (req, res) => {
         };
 
         await transporter.sendMail(mailOptions);
-
         res.json({ message: 'Mật khẩu mới đã được gửi về email!' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
-// 📌 API Đổi mật khẩu với OTP
+//API Đổi mật khẩu với OTP
 router.post('/change-password', async (req, res) => {
     try {
         const { email, currentPassword, newPassword } = req.body;
@@ -285,7 +282,7 @@ router.post('/change-password', async (req, res) => {
 });
 
 
-// 📌 API Cập nhật tài khoản (Không cho phép cập nhật mật khẩu)
+//API Cập nhật tài khoản (Không cho phép cập nhật mật khẩu)
 router.put('/update/:id', upload.single("avatar"), async (req, res) => {
     // console.log("BODY:", req.body);
     // console.log("FILE:", req.file);
@@ -323,7 +320,7 @@ router.put('/update/:id', upload.single("avatar"), async (req, res) => {
     }
 });
 
-// 📌 API Xác thực Token (Validate Token)
+//API Xác thực Token (Validate Token)
 router.post('/validate-token', async (req, res) => {
     try {
         const token = req.headers.authorization?.split(" ")[1];
@@ -340,7 +337,7 @@ router.post('/validate-token', async (req, res) => {
     }
 });
 
-// 📌 API Làm mới Token (Refresh Token)
+//API Làm mới Token (Refresh Token)
 router.post('/refresh-token', async (req, res) => {
     try {
         const { refreshToken } = req.body;

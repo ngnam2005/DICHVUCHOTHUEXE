@@ -7,7 +7,7 @@ import {
     TouchableOpacity,
     Alert
 } from 'react-native';
-import API_BASE_URL from '../localhost/localhost'; // Ensure API_BASE_URL is correct
+import API_BASE_URL from '../localhost/localhost'; 
 import axios from 'axios';
 
 const ItemOrder = ({ item, onCancel }) => {
@@ -29,7 +29,6 @@ const ItemOrder = ({ item, onCancel }) => {
         <View style={styles.orderItem}>
             <Text style={styles.orderTitle}>Đơn hàng - {new Date(item.createdAt).toLocaleDateString()}</Text>
             {item.vehicles.map((v, index) => {
-                // Ensure image URL is correctly formed
                 const imageUrl = v.image?.startsWith('http') ? v.image : `${API_BASE_URL}${v.image}`;
                 console.log(imageUrl)
 
@@ -47,7 +46,7 @@ const ItemOrder = ({ item, onCancel }) => {
                     </View>
                 );
             })}
-
+            <Text>Địa chỉ nhận xe: 116 Nguyễn Huy Tưởng, Liên Chiểu, Đà Nẵng</Text>
             <Text>Ngày thuê: {new Date(item.rentalStartDate).toLocaleDateString()}</Text>
             <Text>Ngày trả: {new Date(item.rentalEndDate).toLocaleDateString()}</Text>
             <Text>Trạng thái thanh toán:<Text style={{ color: item.paymentStatus === "Đã thanh toán" ? 'green' : 'red' }}>{item.paymentStatus}</Text> </Text>

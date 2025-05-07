@@ -26,7 +26,7 @@ const VehicleByTypeScreen = ({ route, navigation }) => {
         const fetchTypeName = async () => {
             try {
                 const response = await axios.get(`${API_BASE_URL}/api/types/getById/${typeId}`);
-                setTypeName(response.data.name); 
+                setTypeName(response.data.name);
             } catch (error) {
                 console.log("Lỗi khi lấy tên loại xe:", error);
             }
@@ -55,7 +55,7 @@ const VehicleByTypeScreen = ({ route, navigation }) => {
     return (
         <View style={styles.container}>
 
-            <Header title={typeName || "Loại xe"} />
+            <Header title={typeName || "Loại xe"} hideUser={true} />
             <FlatList
                 data={vehicles}
                 keyExtractor={(item) => item._id}

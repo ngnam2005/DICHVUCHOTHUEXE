@@ -263,13 +263,11 @@ router.post('/change-password', async (req, res) => {
             return res.status(404).json({ message: 'Email không tồn tại!' });
         }
 
-        // So sánh mật khẩu hiện tại
         const isMatch = await bcrypt.compare(currentPassword, account.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Mật khẩu hiện tại không đúng!' });
         }
 
-        // Cập nhật mật khẩu mới
         // const hashedPassword = await bcrypt.hash(newPassword, 10);
         account.password = newPassword;
         await account.save();

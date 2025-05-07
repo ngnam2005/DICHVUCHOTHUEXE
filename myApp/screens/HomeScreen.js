@@ -123,7 +123,7 @@ const HomeScreen = () => {
                 placeholder="Tìm kiếm xe..."
             />
             <Banner />
-            <Text style={styles.sectionTitle}>Categories</Text>
+            <Text style={styles.sectionTitle}>Types</Text>
             {loadingTypes ? (
                 <ActivityIndicator size="large" color="#0000ff" />
             ) : (

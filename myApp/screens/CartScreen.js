@@ -20,7 +20,7 @@ import {
     updateVehicleQuantity
 } from '../redux/slices/cartSlice';
 import ItemCart from '../components/item_cart_product';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Sử dụng MaterialIcons
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const CartScreen = () => {
     const dispatch = useDispatch();
@@ -194,6 +194,12 @@ const CartScreen = () => {
                             item?.vehicleId?._id?.toString() || `item-${index}`
                         }
                         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Icon name="remove-shopping-cart" size={100} color="gray" />
+                                <Text style={styles.emptyText}>Giỏ hàng của bạn đang trống.</Text>
+                            </View>
+                        }
                     />
 
                     {startDate && endDate && (
@@ -259,6 +265,16 @@ const styles = {
     buttonText: {
         color: 'white',
         fontSize: 16,
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 60,
+    },
+    emptyText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#888',
     },
 };
 
